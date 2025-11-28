@@ -13,7 +13,7 @@ provider "aws" {
 
 # We declare your public key so AWS knows it
 resource "aws_key_pair" "admin_key" {
-  key_name   = "admin-key-portfolio"
+  key_name   = "admin-key-3tier"
   public_key = file("~/.ssh/id_ovh.pub")
 }
 
@@ -39,7 +39,7 @@ data "aws_ami" "web" {
   }
   filter {
     name   = "tag:Project"
-    values = ["Final-Portfolio"]
+    values = ["AWS-3Tier-App"]
   }
 }
 
@@ -52,7 +52,7 @@ data "aws_ami" "app" {
   }
   filter {
     name   = "tag:Project"
-    values = ["Final-Portfolio"]
+    values = ["AWS-3Tier-App"]
   }
 }
 
@@ -65,7 +65,7 @@ data "aws_ami" "db" {
   }
   filter {
     name   = "tag:Project"
-    values = ["Final-Portfolio"]
+    values = ["AWS-3Tier-App"]
   }
 }
 
@@ -73,7 +73,7 @@ data "aws_ami" "db" {
 
 # SG 1: Load Balancer (Public)
 resource "aws_security_group" "lb_sg" {
-  name        = "portfolio-lb-sg"
+  name        = "aws-3tier-lb-sg"
   description = "Allow HTTP from Internet"
   vpc_id      = data.aws_vpc.default.id
 
@@ -94,7 +94,7 @@ resource "aws_security_group" "lb_sg" {
 
 # SG 2: Web Tier (Accepts LB only)
 resource "aws_security_group" "web_sg" {
-  name        = "portfolio-web-sg"
+  name        = "aws-3tier-web-sg"
   description = "Allow HTTP from LB"
   vpc_id      = data.aws_vpc.default.id
 
@@ -123,7 +123,7 @@ resource "aws_security_group" "web_sg" {
 
 # SG 3: App Tier (Accepts Web only)
 resource "aws_security_group" "app_sg" {
-  name        = "portfolio-app-sg"
+  name        = "aws-3tier-app-sg"
   description = "Allow traffic from Web Tier"
   vpc_id      = data.aws_vpc.default.id
 
@@ -151,7 +151,7 @@ resource "aws_security_group" "app_sg" {
 
 # SG 4: DB Tier (Accepts App only)
 resource "aws_security_group" "db_sg" {
-  name        = "portfolio-db-sg"
+  name        = "aws-3tier-db-sg"
   description = "Allow traffic from App Tier"
   vpc_id      = data.aws_vpc.default.id
 
@@ -181,7 +181,7 @@ resource "aws_security_group" "db_sg" {
 
 # Load Balancer
 resource "aws_lb" "main" {
-  name               = "portfolio-lb"
+  name               = "aws-3tier-lb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb_sg.id]
@@ -189,7 +189,7 @@ resource "aws_lb" "main" {
 }
 
 resource "aws_lb_target_group" "web_tg" {
-  name     = "portfolio-web-tg"
+  name     = "aws-3tier-web-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
@@ -263,7 +263,7 @@ resource "aws_instance" "web" {
               EOT
               EOF
 
-  tags = { Name = "Portfolio-Web-${count.index}" }
+  tags = { Name = "AWS-3Tier-Web-${count.index}" }
 }
 
 # App Servers (x1)
@@ -286,7 +286,7 @@ resource "aws_instance" "app" {
               systemctl restart myapp
               EOF
 
-  tags = { Name = "Portfolio-App" }
+  tags = { Name = "AWS-3Tier-App" }
 }
 
 # DB Servers (x2)
@@ -298,7 +298,7 @@ resource "aws_instance" "db" {
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   
   tags = {
-    Name = "Portfolio-DB-${count.index}"
+    Name = "AWS-3Tier-DB-${count.index}"
   }
 }
 

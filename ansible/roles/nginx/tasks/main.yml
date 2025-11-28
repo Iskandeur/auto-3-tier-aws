@@ -5,7 +5,7 @@
 - name: Start Nginx
   service: name=nginx state=started enabled=yes
 
-- name: Custom Page (Portfolio Proof)
+- name: Custom Page (3-Tier App Proof)
   copy:
     content: "<h1>Server: {{ ansible_hostname }} | Layer: Web</h1>"
     dest: /var/www/html/index.html

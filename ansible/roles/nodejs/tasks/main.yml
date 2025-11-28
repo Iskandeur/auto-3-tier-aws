@@ -17,7 +17,7 @@
     dest: /etc/systemd/system/myapp.service
     content: |
       [Unit]
-      Description=My Portfolio App
+      Description=My 3-Tier App
       After=network.target
 
       [Service]

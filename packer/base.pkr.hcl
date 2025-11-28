@@ -34,7 +34,7 @@ source "amazon-ebs" "ubuntu-base" {
   }
 
   tags = {
-    Project   = "Final-Portfolio"
+    Project   = "AWS-3Tier-App"
     BaseImage = "True"
   }
 }

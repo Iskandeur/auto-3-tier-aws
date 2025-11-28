@@ -26,7 +26,7 @@ source "amazon-ebs" "layer" {
   source_ami_filter {
     filters = {
       "tag:BaseImage" = "True"       # We look for the tag we set
-      "tag:Project"   = "Final-Portfolio"
+      "tag:Project"   = "AWS-3Tier-App"
     }
     most_recent = true
     owners      = ["self"]
@@ -42,21 +42,21 @@ build {
   source "source.amazon-ebs.layer" {
     name     = "web"
     ami_name = "alexandre-web-${local.timestamp}"
-    tags     = { Role = "Web", Project = "Final-Portfolio" }
+    tags     = { Role = "Web", Project = "AWS-3Tier-App" }
   }
 
   # 2. Image APP
   source "source.amazon-ebs.layer" {
     name     = "app"
     ami_name = "alexandre-app-${local.timestamp}"
-    tags     = { Role = "App", Project = "Final-Portfolio" }
+    tags     = { Role = "App", Project = "AWS-3Tier-App" }
   }
 
   # 3. Image DB
   source "source.amazon-ebs.layer" {
     name     = "db"
     ami_name = "alexandre-db-${local.timestamp}"
-    tags     = { Role = "DB", Project = "Final-Portfolio" }
+    tags     = { Role = "DB", Project = "AWS-3Tier-App" }
   }
 
   # --- COMMON PROVISIONING ---

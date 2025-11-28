@@ -8,7 +8,7 @@ console.log("DB_HOST:", process.env.DB_HOST);
 const dbConfig = {
     user: 'postgres',
     host: process.env.DB_HOST,
-    database: 'portfolio_db',
+    database: 'app_db',
     password: 'mypassword', // We keep this one
     port: 5432,
 };

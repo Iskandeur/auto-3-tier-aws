@@ -1,4 +1,4 @@
-# ☁️ Automated 3-Tier Architecture on AWS
+# ☁️ AWS 3-Tier Architecture
 
 This project deploys a highly available and secure Web infrastructure on AWS, fully automated following **Infrastructure as Code** and **Immutable Infrastructure** principles.
 
