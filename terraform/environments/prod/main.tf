@@ -11,6 +11,12 @@ provider "aws" {
   region = "us-east-1"
 }
 
+# We declare your public key so AWS knows it
+resource "aws_key_pair" "admin_key" {
+  key_name   = "admin-key-portfolio"
+  public_key = file("~/.ssh/id_ovh.pub")
+}
+
 # --- 1. DATA SOURCES ---
 
 data "aws_vpc" "default" {
@@ -207,31 +213,80 @@ resource "aws_lb_listener" "front_end" {
 
 # Web Servers (x2)
 resource "aws_instance" "web" {
-  count                  = 2
-  ami                    = data.aws_ami.web.id
-  instance_type          = "t3.micro"
+  count         = 2
+  ami           = data.aws_ami.web.id
+  instance_type = "t3.micro"
+  key_name      = aws_key_pair.admin_key.key_name
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
+  # App IP Injection + Dynamic HTML Creation
   user_data = <<-EOF
               #!/bin/bash
-              echo "<h1>Real Server: $(hostname -f)</h1>" > /var/www/html/index.html
+              # 1. Configure Nginx with App IP
+              sed -i 's/APP_IP_PLACEHOLDER/${aws_instance.app[0].private_ip}/g' /etc/nginx/sites-available/default
+              systemctl restart nginx
+
+              # 2. Create Web page with JS calling the API
+              cat <<EOT > /var/www/html/index.html
+              <!DOCTYPE html>
+              <html>
+              <head>
+                  <style>
+                      body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0f0f0; }
+                      .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block; }
+                      h1 { color: #333; }
+                      .db-msg { color: blue; font-weight: bold; font-size: 1.2em; }
+                  </style>
+              </head>
+              <body>
+                  <div class="card">
+                      <h1>3-Tier Architecture</h1>
+                      <p>Web Server: <strong>$(hostname)</strong></p>
+                      <hr>
+                      <p>Message from DB (via App Tier):</p>
+                      <div id="db-data" class="db-msg">Loading...</div>
+                  </div>
+
+                  <script>
+                    fetch('/api/message')
+                      .then(r => r.json())
+                      .then(data => {
+                          document.getElementById('db-data').innerText = data.message;
+                      })
+                      .catch(err => {
+                          document.getElementById('db-data').innerText = "Error connecting to API";
+                          document.getElementById('db-data').style.color = "red";
+                      });
+                  </script>
+              </body>
+              </html>
+              EOT
               EOF
-              
-  tags = {
-    Name = "Portfolio-Web-${count.index}"
-  }
+
+  tags = { Name = "Portfolio-Web-${count.index}" }
 }
 
-# App Servers (x2)
+# App Servers (x1)
 resource "aws_instance" "app" {
-  count                  = 2
+  count                  = 1
   ami                    = data.aws_ami.app.id
   instance_type          = "t3.micro"
   vpc_security_group_ids = [aws_security_group.app_sg.id]
+  key_name               = aws_key_pair.admin_key.key_name
   
-  tags = {
-    Name = "Portfolio-App-${count.index}"
-  }
+  # ROBUST FIX:
+  # 1. Create .env file
+  # 2. Change permissions to ensure app can read it
+  # 3. Explicitly restart the service
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "DB_HOST=${aws_instance.db[0].private_ip}" > /opt/myapp/.env
+              chmod 644 /opt/myapp/.env
+              systemctl daemon-reload
+              systemctl restart myapp
+              EOF
+
+  tags = { Name = "Portfolio-App" }
 }
 
 # DB Servers (x2)
@@ -239,6 +294,7 @@ resource "aws_instance" "db" {
   count                  = 2
   ami                    = data.aws_ami.db.id
   instance_type          = "t3.micro"
+  key_name      = aws_key_pair.admin_key.key_name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   
   tags = {
