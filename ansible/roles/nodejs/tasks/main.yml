@@ -1,0 +1,34 @@
+---
+- name: Install Node.js & NPM
+  apt:
+    name: ["nodejs", "npm"]
+    state: present
+
+- name: Create App Directory
+  file: path=/opt/myapp state=directory
+
+- name: Copy Application Code
+  copy:
+    src: ../../../app/server.js  # On va créer ce fichier juste après
+    dest: /opt/myapp/server.js
+
+- name: Create Systemd Service for Node
+  copy:
+    dest: /etc/systemd/system/myapp.service
+    content: |
+      [Unit]
+      Description=My Portfolio App
+      After=network.target
+
+      [Service]
+      ExecStart=/usr/bin/node /opt/myapp/server.js
+      Restart=always
+      User=ubuntu
+      Environment=PORT=3000
+
+      [Install]
+      WantedBy=multi-user.target
+  notify: Restart App
+
+- name: Start App Service
+  service: name=myapp state=started enabled=yes

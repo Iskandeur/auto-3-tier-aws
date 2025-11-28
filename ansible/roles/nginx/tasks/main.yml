@@ -1,0 +1,11 @@
+---
+- name: Install Nginx
+  apt: name=nginx state=present
+
+- name: Start Nginx
+  service: name=nginx state=started enabled=yes
+
+- name: Custom Page (Portfolio Proof)
+  copy:
+    content: "<h1>Server: {{ ansible_hostname }} | Layer: Web</h1>"
+    dest: /var/www/html/index.html

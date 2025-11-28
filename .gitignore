@@ -1,0 +1,11 @@
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.env
+openrc.sh
+packer_cache/
+key.pem
+node_modules/
+.DS_Store
+*.retry

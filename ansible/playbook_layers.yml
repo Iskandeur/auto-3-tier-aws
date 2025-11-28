@@ -1,0 +1,17 @@
+---
+- name: Layer Provisioning
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Apply Web Role
+      include_role: name=nginx
+      when: target_role == "web"
+
+    - name: Apply App Role
+      include_role: name=nodejs
+      when: target_role == "app"
+
+    - name: Apply DB Role
+      include_role: name=postgresql
+      when: target_role == "db"
