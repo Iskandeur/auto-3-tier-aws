@@ -17,3 +17,29 @@
     path: /etc/postgresql/14/main/pg_hba.conf
     line: "host    all             all             0.0.0.0/0            md5"
   notify: Restart Postgres
+
+
+- name: Install Python psycopg2
+  apt: name=python3-psycopg2 state=present
+
+- name: Create Database
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: portfolio_db
+
+- name: Create DB User
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    db: portfolio_db
+    name: postgres
+    password: mypassword  # <--- FIX HERE (was 'mdp')
+    role_attr_flags: SUPERUSER
+
+- name: Create Table & Data
+  become_user: postgres
+  community.postgresql.postgresql_query:
+    db: portfolio_db
+    query: |
+      CREATE TABLE IF NOT EXISTS messages (content TEXT);
+      DELETE FROM messages;
+      INSERT INTO messages VALUES ('Hello from the Database (Tier 3)! 🗄️');

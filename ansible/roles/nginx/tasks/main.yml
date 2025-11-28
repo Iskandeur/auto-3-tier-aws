@@ -9,3 +9,24 @@
   copy:
     content: "<h1>Server: {{ ansible_hostname }} | Layer: Web</h1>"
     dest: /var/www/html/index.html
+
+- name: Configure Nginx Proxy
+  copy:
+    dest: /etc/nginx/sites-available/default
+    content: |
+      server {
+        listen 80;
+        root /var/www/html;
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ =404;
+        }
+
+        location /api/ {
+            # Tip: We use a variable so Nginx doesn't check the IP at startup
+            set $upstream_app http://APP_IP_PLACEHOLDER:3000;
+            proxy_pass $upstream_app;
+        }
+      }
+  notify: Restart Nginx

@@ -48,7 +48,7 @@ build {
       "sudo apt-get update",
       "sudo apt-get upgrade -y",
       "sudo apt-get install -y curl git htop vim python3-pip net-tools",
-      # Installation d'Ansible SUR l'image pour qu'elle soit autonome si besoin
+      # Install Ansible ON the image so it is autonomous if needed
       "sudo apt-get install -y software-properties-common",
       "sudo add-apt-repository --yes --update ppa:ansible/ansible",
       "sudo apt-get install -y ansible"

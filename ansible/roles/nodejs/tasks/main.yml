@@ -9,7 +9,7 @@
 
 - name: Copy Application Code
   copy:
-    src: ../../../app/server.js  # On va créer ce fichier juste après
+    src: ../../../app/server.js  # We will create this file right after
     dest: /opt/myapp/server.js
 
 - name: Create Systemd Service for Node
@@ -32,3 +32,24 @@
 
 - name: Start App Service
   service: name=myapp state=started enabled=yes
+# ... previous tasks ...
+
+- name: Copy App
+  copy: src=../../../app/ dest=/opt/myapp/
+
+- name: Install Dependencies
+  npm: path=/opt/myapp
+
+- name: Create Service
+  copy:
+    dest: /etc/systemd/system/myapp.service
+    content: |
+      [Unit]
+      Description=Node App
+      [Service]
+      ExecStart=/usr/bin/node /opt/myapp/server.js
+      Restart=always
+      User=ubuntu
+      EnvironmentFile=/opt/myapp/.env
+      [Install]
+      WantedBy=multi-user.target

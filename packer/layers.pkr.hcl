@@ -65,6 +65,7 @@ build {
   provisioner "ansible" {
     playbook_file = "../ansible/playbook_layers.yml"
     user          = "ubuntu"
+    ansible_env_vars = ["ANSIBLE_SSH_PIPELINING=True"]
     # We pass the source name (web, app, or db) as a variable to Ansible
     extra_arguments = ["--extra-vars", "target_role=${source.name}"]
   }
