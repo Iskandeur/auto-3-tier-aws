@@ -47,15 +47,60 @@ Unlike a classic approach (runtime configuration), this project uses the **Golde
 - Packer >= 1.8
 - AWS Account with access keys configured
 
-### 1. Build Images (Packer)
+### 1. Setup Environment
+
+Before starting, you need to configure your AWS credentials and SSH keys.
+
+#### A. Export AWS Credentials
+Make sure your AWS credentials are available in your shell:
 
 ```bash
+export AWS_ACCESS_KEY_ID="your_access_key"
+export AWS_SECRET_ACCESS_KEY="your_secret_key"
+```
+
+#### B. Setup SSH Keys
+Terraform requires an SSH key pair to inject into the instances.
+
+1. **Generate a key pair** (if you don't have one):
+   ```bash
+   ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_aws_3tier -C "aws-3tier-key" -N ""
+   ```
+
+2. **Update `terraform/environments/prod/main.tf`**:
+   Open the file and find the `aws_key_pair` resource. Update the path to match your public key location (use an absolute path):
+
+   ```hcl
+   resource "aws_key_pair" "admin_key" {
+     key_name   = "admin-key-3tier"
+     # REPLACE with your actual path, e.g., /home/youruser/.ssh/id_aws_3tier.pub
+     public_key = file("/home/youruser/.ssh/id_aws_3tier.pub")
+   }
+   ```
+
+### 2. Build Images (Packer)
+
+This project uses a two-stage build process:
+1. **Base Image:** A common hardened base (Ubuntu + common tools).
+2. **Layer Images:** 3 specialized images (Web, App, DB) derived from the base.
+
+**Important:** Run these commands sequentially to avoid variable conflicts.
+
+#### Step A: Build the Base Image
+```bash
 cd packer
+packer init base.pkr.hcl
+packer build base.pkr.hcl
+```
+
+#### Step B: Build the Layer Images
+```bash
+# Wait for the base build to finish first
 packer init layers.pkr.hcl
 packer build layers.pkr.hcl
 ```
 
-### 2. Infrastructure Deployment (Terraform)
+### 3. Infrastructure Deployment (Terraform)
 
 ```bash
 cd terraform/environments/prod
